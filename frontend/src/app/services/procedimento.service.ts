@@ -9,7 +9,7 @@ import { AuthService } from './auth.service';
 export class ProcedimentoService {
   private http = inject(HttpClient)
   private authService = inject(AuthService)
-  private apiUrl = 'http://localhost:8080/procedimentos'
+  private apiUrl = 'http://localhost:8082/procedimentos'
 
   private getHeaders ():{headers : HttpHeaders}{
     const token = this.authService.getToken()

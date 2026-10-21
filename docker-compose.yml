@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # Banco de Dados PostgreSQL
   db:
@@ -5,29 +7,87 @@ services:
     container_name: bellagestora_db
     restart: always
     environment:
-      POSTGRES_DB: bellagestora
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - bellagestora-net
 
-  # Back-end Spring Boot
-  backend:
-    build: ./backend
-    container_name: bellagestora_backend
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: bellagestora_rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"  
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    networks:
+      - bellagestora-net
+
+  # auth (Login/CriarUser)
+  auth-service:
+    build: ./auth-service 
+    container_name: bellagestora_auth
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/db_auth
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=admin
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    depends_on:
+      - db
+      - rabbitmq
+    networks:
+      - bellagestora-net
+
+  # core-service(Procedimentos/Agendamentos)
+  core-service:
+    build: ./core-service 
+    container_name: bellagestora_core
     restart: always
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/bellagestora
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/db_core
       - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=admin
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
     depends_on:
       - db
+      - rabbitmq
+    networks:
+      - bellagestora-net
 
-  # Front-end Angular
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: bellagestora_gateway
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://auth-service:8081
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://core-service:8080
+    depends_on:
+      - auth-service
+      - core-service 
+    networks:
+      - bellagestora-net
+
+  # Front
   frontend:
     build: ./frontend
     container_name: bellagestora_frontend
@@ -35,7 +95,13 @@ services:
     ports:
       - "4200:80"
     depends_on:
-      - backend
+      - api-gateway
+    networks:
+      - bellagestora-net
 
 volumes:
   postgres_data:
+
+networks:
+  bellagestora-net:
+    driver: bridge

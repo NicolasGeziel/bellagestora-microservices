@@ -9,7 +9,7 @@ import { AuthService } from './auth.service';
 export class AgendamentoService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = 'http://localhost:8080/agendamentos';
+  private apiUrl = 'http://localhost:8082/agendamentos';
 
   private getHeaders() {
     return { headers: new HttpHeaders({ 'Authorization': `Bearer ${this.authService.getToken()}` }) };

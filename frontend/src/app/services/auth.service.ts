@@ -8,7 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/auth'; 
+  private apiUrl = 'http://localhost:8082/auth'; 
 
   login(credenciais: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credenciais).pipe(
