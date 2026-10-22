@@ -125,25 +125,7 @@ Antes de começar, verifique se você possui as seguintes ferramentas instaladas
 - [Node.js e npm](https://nodejs.org/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) ou Docker Engine com Docker Compose.
 
-### 1. Compilar os microsserviços Java
-
-Antes de iniciar os contêineres, compile os três projetos Java para gerar os arquivos `.jar`.
-
-Abra um terminal dentro de cada uma das pastas abaixo e execute o comando:
-
-```bash
-mvn clean package -DskipTests
-```
-
-Pastas que devem ser compiladas:
-
-- `/api-gateway`
-- `/auth-service`
-- `/core-service`
-
-**Importante:** esse comando ignora a execução dos testes automatizados. Ele é útil para gerar os arquivos `.jar` rapidamente, mas não substitui a execução dos testes antes de disponibilizar o sistema em produção.
-
-### 2. Configurar as credenciais
+### 1. Configurar as credenciais
 
 Na raiz do projeto, no mesmo nível do arquivo `docker-compose.yml`, crie um arquivo chamado `.env`.
 
@@ -160,7 +142,7 @@ Substitua os valores de exemplo por senhas seguras.
 
 As variáveis e os nomes utilizados devem corresponder às configurações definidas no `docker-compose.yml` e nos arquivos de configuração dos serviços.
 
-### 3. Iniciar a aplicação
+### 2. Iniciar a aplicação
 
 Abra um terminal na raiz do projeto, onde está localizado o arquivo `docker-compose.yml`, e execute:
 
@@ -170,7 +152,7 @@ docker compose up -d --build
 Esse comando solicita ao Docker Compose que construa as imagens necessárias e inicie os serviços em segundo plano.
 Na primeira inicialização, aguarde até que os bancos de dados, o RabbitMQ e as aplicações estejam prontos para receber requisições.
 
-### 4. Acessar a aplicação
+### 3. Acessar a aplicação
 
 Após a inicialização dos serviços, os endereços esperados são:
 
